@@ -72,8 +72,7 @@ RUN uv pip install --system -r requirements.txt
 COPY . .
 
 # Create necessary directories
-RUN mkdir -p /app/pretrained_weight \
-    /app/test \
+RUN mkdir -p /app/test \
     /app/logs \
     /app/temp
 

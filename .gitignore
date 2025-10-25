@@ -17,3 +17,8 @@ log/
 tools/*.jpg
 tools/*.mp4
 pre_training.py
+pretrained_weight/
+# Environment files
+.env
+.env.local
+.env.*.local

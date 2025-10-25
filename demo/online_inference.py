@@ -1,6 +1,11 @@
 import torch
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import DataLoader
+
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 from models import Uni_Sign
 import utils as utils
 from datasets import S2T_Dataset_online
@@ -48,7 +53,7 @@ def main(args):
         print('***********************************')
         print('Load Checkpoint...')
         print('***********************************')
-        state_dict = torch.load(args.finetune, map_location='cpu')['model']
+        state_dict = torch.load(args.finetune, map_location='cpu', weights_only=True)['model']
 
         ret = model.load_state_dict(state_dict, strict=True)
         print('Missing keys: \n', '\n'.join(ret.missing_keys))
@@ -123,7 +128,7 @@ def inference(data_loader, model):
             stack_out = model(src_input, tgt_input)
 
             output = model.generate(stack_out,
-                                    max_new_tokens=100,
+                                    max_new_tokens=50,
                                     num_beams=4,
                                     )
 

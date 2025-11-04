@@ -6,8 +6,8 @@
 set -e  # Exit on error
 
 # Configuration
-IMAGE_NAME="unisign:latest"
-CONTAINER_NAME="unisign-server"
+IMAGE_NAME="cosignai:v1"
+CONTAINER_NAME="cosignai-server"
 HOST_PORT=6336
 CONTAINER_PORT=8000
 

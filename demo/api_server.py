@@ -34,7 +34,6 @@ from config import *
 from rtmlib import Wholebody
 from torch.nn.utils.rnn import pad_sequence
 
-# ✅ THAY ĐỔI 1: Thread-safe model wrapper
 class ModelManager:
     """Thread-safe model manager"""
     def __init__(self):
@@ -179,7 +178,6 @@ class ModelManager:
     
     def inference(self, video_path: str):
         """
-        ✅ THAY ĐỔI 3: Thread-safe inference with lock
         Only one inference at a time to avoid GPU memory conflicts
         """
         with self.lock:  # ← Mutex: Chỉ 1 request được chạy tại 1 thời điểm
@@ -251,7 +249,7 @@ class ModelManager:
             return prediction
 
 
-# THAY ĐỔI 4: Singleton instance
+# Singleton instance
 model_manager = ModelManager()
 
 

@@ -1,85 +1,87 @@
 #!/bin/bash
 
-# Uni-Sign Docker Container Runner
-# This script runs the Uni-Sign container with GPU support
+# Uni-Sign Docker Container Runner (Persistent Version)
+# Giữ lại container sau khi dừng, để có thể restart lại mà không mất dữ liệu
 
-set -e  # Exit on error
+set -e  # Dừng nếu có lỗi
 
-# Configuration
-IMAGE_NAME="cosignai:v1"
+# Cấu hình
+IMAGE_NAME="vamcrizer/cosign.slim:latest"
 CONTAINER_NAME="cosignai-server"
 HOST_PORT=6336
 CONTAINER_PORT=8000
 
-# Colors for output
+# Màu cho output
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
 echo "================================================"
-echo "  Starting Uni-Sign Container"
+echo "  Starting Uni-Sign Container (Persistent Mode)"
 echo "================================================"
 
-# Check if Docker is running
+# Kiểm tra Docker đang chạy
 if ! docker info > /dev/null 2>&1; then
-    echo -e "${RED}Error: Docker is not running!${NC}"
+    echo -e "${RED}Error: Docker chưa khởi động!${NC}"
     exit 1
 fi
 
-# Check if NVIDIA GPU is available
+# Kiểm tra GPU
 if ! docker run --rm --gpus all nvidia/cuda:12.8.0-runtime-ubuntu22.04 nvidia-smi > /dev/null 2>&1; then
-    echo -e "${YELLOW}Warning: GPU not detected or NVIDIA Container Toolkit not installed${NC}"
-    echo -e "${YELLOW}Container will run but may not use GPU acceleration${NC}"
-    read -p "Continue anyway? (y/n) " -n 1 -r
+    echo -e "${YELLOW}Warning: Không phát hiện GPU hoặc chưa cài NVIDIA Container Toolkit${NC}"
+    read -p "Tiếp tục chạy CPU-only? (y/n) " -n 1 -r
     echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
         exit 1
     fi
+    GPU_FLAG=""
+else
+    GPU_FLAG="--gpus all"
 fi
 
-# Check if image exists
+# Kiểm tra image
 if ! docker image inspect ${IMAGE_NAME} > /dev/null 2>&1; then
-    echo -e "${RED}Error: Image '${IMAGE_NAME}' not found!${NC}"
-    echo "Please build the image first with: docker build -t ${IMAGE_NAME} ."
+    echo -e "${RED}Error: Image '${IMAGE_NAME}' chưa tồn tại!${NC}"
+    echo "Hãy build image trước với: docker build -t ${IMAGE_NAME} ."
     exit 1
 fi
 
-# Check if pretrained_weight directory exists
+# Kiểm tra thư mục pretrained_weight
 if [ ! -d "$(pwd)/pretrained_weight" ]; then
-    echo -e "${YELLOW}Warning: pretrained_weight directory not found!${NC}"
-    echo "Creating directory: $(pwd)/pretrained_weight"
+    echo -e "${YELLOW}Warning: Không tìm thấy thư mục pretrained_weight${NC}"
     mkdir -p "$(pwd)/pretrained_weight"
 fi
 
-# Check if port is already in use
+# Kiểm tra port
 if lsof -Pi :${HOST_PORT} -sTCP:LISTEN -t >/dev/null 2>&1 ; then
-    echo -e "${RED}Error: Port ${HOST_PORT} is already in use!${NC}"
-    echo "Please stop the service using this port or change HOST_PORT in this script"
+    echo -e "${RED}Error: Port ${HOST_PORT} đang được sử dụng!${NC}"
     exit 1
 fi
 
-# Stop and remove existing container if running
+# Nếu container đã tồn tại -> hỏi khởi động lại hay tạo mới
 if docker ps -a --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
-    echo -e "${YELLOW}Stopping and removing existing container...${NC}"
-    docker stop ${CONTAINER_NAME} > /dev/null 2>&1 || true
-    docker rm ${CONTAINER_NAME} > /dev/null 2>&1 || true
+    echo -e "${YELLOW}Container '${CONTAINER_NAME}' đã tồn tại.${NC}"
+    read -p "Bạn muốn khởi động lại container cũ? (y/n) " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        echo -e "${GREEN}Đang khởi động lại container...${NC}"
+        docker start -ai ${CONTAINER_NAME}
+        exit 0
+    else
+        echo -e "${YELLOW}Xóa container cũ...${NC}"
+        docker rm -f ${CONTAINER_NAME} > /dev/null 2>&1
+    fi
 fi
 
-echo -e "${GREEN}Starting container...${NC}"
-echo "  Image: ${IMAGE_NAME}"
-echo "  Port: http://localhost:${HOST_PORT}"
-echo "  API Docs: http://localhost:${HOST_PORT}/docs"
-echo "  Health: http://localhost:${HOST_PORT}/health"
-echo ""
-echo -e "${YELLOW}Press Ctrl+C to stop the container${NC}"
-echo "================================================"
-echo ""
-
-# Run container
-docker run --rm \
+# Chạy container (giữ lại sau khi dừng)
+echo -e "${GREEN}Đang khởi động container...${NC}"
+docker run -it \
   --name ${CONTAINER_NAME} \
-  --gpus all \
+  ${GPU_FLAG} \
   -p ${HOST_PORT}:${CONTAINER_PORT} \
   -v "$(pwd)/pretrained_weight:/app/pretrained_weight" \
   ${IMAGE_NAME}
+
+echo -e "${GREEN}Container đã dừng nhưng vẫn được giữ lại.${NC}"
+echo "Bạn có thể chạy lại bằng: docker start -ai ${CONTAINER_NAME}"

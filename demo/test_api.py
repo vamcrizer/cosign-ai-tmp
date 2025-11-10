@@ -5,12 +5,12 @@ import requests
 import sys
 
 # Server URL
-BASE_URL = "http://localhost:8000"
+BASE_URL = "http://localhost:6336"
 
 
 def test_health():
     """Test health endpoint"""
-    print("🔍 Testing health endpoint...")
+    print("Testing health endpoint...")
     response = requests.get(f"{BASE_URL}/health")
     print(f"Status: {response.status_code}")
     print(f"Response: {response.json()}\n")
@@ -18,7 +18,7 @@ def test_health():
 
 def test_predict_upload(video_path: str):
     """Test prediction with file upload"""
-    print(f"📤 Uploading video: {video_path}")
+    print(f"Uploading video: {video_path}")
     
     with open(video_path, "rb") as f:
         files = {"file": (video_path, f, "video/mp4")}

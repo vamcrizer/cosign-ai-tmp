@@ -22,3 +22,9 @@ pretrained_weight/
 .env
 .env.local
 .env.*.local
+cuda_12.8.0_570.86.10_linux.run
+cuda-keyring_1.1-1_all.deb.1
+cuda-keyring_1.1-1_all.deb.2
+cuda-repo-wsl-ubuntu-12-8-local_12.8.0-1_amd64.deb
+Dockerfile.optimized
+ignore.txt

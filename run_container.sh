@@ -6,7 +6,7 @@
 set -e  # Dừng nếu có lỗi
 
 # Cấu hình
-IMAGE_NAME="vamcrizer/cosign.slim:latest"
+IMAGE_NAME="vamcrizer/cosign:v1"
 CONTAINER_NAME="cosignai-server"
 HOST_PORT=6336
 CONTAINER_PORT=8000
